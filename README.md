@@ -1,3 +1,7 @@
+# This fork
+
+This fork adds stream-reuse.c for POC of the keystream bug
+
 
 # LOCKIT V3 LINUX DECRYPTOR
 
