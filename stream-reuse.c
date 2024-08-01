@@ -372,6 +372,8 @@ int do_decrypt(FILE *ifile, FILE *ofile, footer_no_filename *fnfn, off_t end, bo
         }
         cur = ftello(ifile);
     }
+    ftruncate(fileno(ofile), end);
+    
     return 0;
 }
 
