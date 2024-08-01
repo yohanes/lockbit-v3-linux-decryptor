@@ -500,52 +500,51 @@ int main(int argc, char *argv[]) {
     EncFooter ef2 = load_enc_footer(long_name_encrypted);
     hexdump(ef2.data, ef2.len);
 
-	iconv_t cd;
-	cd = iconv_open("UTF-16LE", "UTF-8");
-	if (cd == (iconv_t)-1) {
-	    perror("iconv_open");
-	    exit(EXIT_FAILURE);
-	}
+    iconv_t cd;
+    cd = iconv_open("UTF-16LE", "UTF-8");
+    if (cd == (iconv_t)-1) {
+        perror("iconv_open");
+        exit(EXIT_FAILURE);
+    }
 
-	void *workmem = malloc(aP_workmem_size(0));
-	if (workmem == NULL) {
-		fprintf(stderr, "Error: not enough memory\n");
-		return 1;
-	}
-	//make sure we have at least one argument
-	if (argc < 2) {
-		fprintf(stderr, "Usage: %s string\n", argv[0]);
-		return 1;
-	}
-	const char *long_name = argv[3]; 
-	size_t sourceLen = strlen(long_name);
-	size_t bufferSize = sourceLen * 2; // Rough estimate for buffer size (each char may take 2 bytes in UTF-16)
-	wchar_t *utf16Buffer = (wchar_t *)malloc((bufferSize + 1) * sizeof(wchar_t)); // +1 for null terminator
+    void *workmem = malloc(aP_workmem_size(0));
+    if (workmem == NULL) {
+        fprintf(stderr, "Error: not enough memory\n");
+        return 1;
+    }
+    //make sure we have at least one argument
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s string\n", argv[0]);
+        return 1;
+    }
+    const char *long_name = argv[3];
+    size_t sourceLen = strlen(long_name);
+    size_t bufferSize = sourceLen * 2; // Rough estimate for buffer size (each char may take 2 bytes in UTF-16)
+    wchar_t *utf16Buffer = (wchar_t *)malloc((bufferSize + 1) * sizeof(wchar_t)); // +1 for null terminator
 
-	char *inbuf = (char *)long_name;
-	char *outbuf = (char *)utf16Buffer;
-	size_t inbytesleft = sourceLen;
-	size_t outbytesleft = bufferSize * sizeof(wchar_t);
-	
-	size_t result = iconv(cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
-	if (result == (size_t)-1) {
-	    perror("iconv");
-	    exit(EXIT_FAILURE);
-	}	
+    char *inbuf = (char *)long_name;
+    char *outbuf = (char *)utf16Buffer;
+    size_t inbytesleft = sourceLen;
+    size_t outbytesleft = bufferSize * sizeof(wchar_t);
+    size_t result = iconv(cd, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+    if (result == (size_t)-1) {
+       perror("iconv");
+       exit(EXIT_FAILURE);
+    }
 
 
     uint8_t *data = (uint8_t *)utf16Buffer;
-	int finalLen = (bufferSize * sizeof(wchar_t)) - outbytesleft;
-	//include nulls
-	finalLen += 2;
+    int finalLen = (bufferSize * sizeof(wchar_t)) - outbytesleft;
+    //include nulls
+    finalLen += 2;
 
-	//compress the string
-	char *output = (char*)malloc(aP_max_packed_size(bufferSize * finalLen));
-	unsigned int sz = aP_pack(utf16Buffer, output, finalLen, workmem, NULL, NULL);
-	if (sz == 0) {
-		fprintf(stderr, "Error: compression failed\n");
-		return 1;
-	}
+    //compress the string
+    char *output = (char*)malloc(aP_max_packed_size(bufferSize * finalLen));
+    unsigned int sz = aP_pack(utf16Buffer, output, finalLen, workmem, NULL, NULL);
+    if (sz == 0) {
+        fprintf(stderr, "Error: compression failed\n");
+        return 1;
+    }
 
     //hexdump compressed output
     printf("Compressed file name (%d bytes)", sz);
